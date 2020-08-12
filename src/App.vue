@@ -94,6 +94,8 @@ export default Vue.extend({
 
 	created() {
 		this.createAuthObserver()
+		this.$store.dispatch('bindStocks')
+		this.$store.dispatch('bindStockContexts')
 	}
 })
 </script>

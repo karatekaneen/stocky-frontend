@@ -4,13 +4,16 @@ export type Stock = {
 	id: number
 }
 
-export type PendingSignal = {
+export type Signal = {
 	date: string
 	type: string
 	action: string
-	price: null
+	price: number
 	stock: Stock
 	status: string
+}
+export type PendingSignal = Omit<Signal, 'price'> & {
+	price: null
 }
 
 export type StockContext = {
