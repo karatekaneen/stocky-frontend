@@ -13,7 +13,12 @@ import Vue from 'vue'
 import StockTable from '@/components/stocks/StockTable.vue'
 
 export default Vue.extend({
-	components: { StockTable }
+	components: { StockTable },
+
+	created() {
+		this.$store.dispatch('loadStocks')
+		this.$store.dispatch('loadContexts')
+	}
 })
 </script>
 
