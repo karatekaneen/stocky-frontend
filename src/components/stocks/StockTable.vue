@@ -47,7 +47,7 @@ export default Vue.extend({
 					throw new Error(`Missing stock with id ${sc.id}`)
 				}
 
-				return { ...sc, stock }
+				return { ...sc, stock, triggerPrice: parseFloat(sc.triggerPrice.toFixed(2)) }
 			})
 		}
 	},
@@ -60,6 +60,7 @@ export default Vue.extend({
 				{
 					text: 'name',
 					align: 'start',
+					groupable: false,
 					value: 'stock.name'
 				},
 				{ text: 'List', value: 'stock.list' },
