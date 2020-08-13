@@ -22,16 +22,26 @@ const { db } = new DBWrapper()
 type BaseState = {
 	stocks: Stock[]
 	stockContexts: StockContext[]
+	signalsFullWidth: boolean
+	priceChartFullWidth: boolean
 }
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
 	state: {
+		// Cached data:
 		stocks: [] as Stock[],
-		stockContexts: [] as StockContext[]
+		stockContexts: [] as StockContext[],
+
+		// Settings:
+		signalsFullWidth: false,
+		priceChartFullWidth: false
 	},
-	mutations: vuexfireMutations,
+	mutations: {
+		...vuexfireMutations,
+		setSignalFullWidth: (state: BaseState, value: boolean) => (state.signalsFullWidth = value)
+	},
 	actions: {
 		bindStocks: firestoreAction(({ bindFirestoreRef }) => {
 			return bindFirestoreRef('stocks', db.collection('securities'))

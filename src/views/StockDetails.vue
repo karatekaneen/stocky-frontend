@@ -1,8 +1,15 @@
 <template>
 	<v-container fluid>
+		<div>{{ $route.params.id }}</div>
 		<v-row>
-			<v-col cols="4">
-				<div>Det här ska vara graf - {{ $route.params.id }}</div>
+			<v-col :cols="chartFullWidth ? 12 : 6">
+				<price-chart v-if="signalDoc && signalDoc.signals" :signals="signalDoc.signals">
+					<template #actions>
+						<v-icon @click="chartFullWidth = !chartFullWidth">
+							{{ chartFullWidth ? 'fullscreen_exit' : 'fullscreen' }}
+						</v-icon>
+					</template>
+				</price-chart>
 			</v-col>
 			<v-col :cols="signalFullWidth ? 12 : 6" v-if="signalDoc && signalDoc.signals">
 				<signal-table :signals="signalDoc.signals">
@@ -22,16 +29,29 @@ import Vue from 'vue'
 import { Signal } from '@/types'
 import DBWrapper from '@/services/DBWrapper'
 import SignalTable from '@/components/signals/SignalTable.vue'
+import PriceChart from '@/components/charts/PriceChart.vue'
 
 const { db } = new DBWrapper()
 
 export default Vue.extend({
-	components: { SignalTable },
+	components: { SignalTable, PriceChart },
+
+	computed: {
+		signalFullWidth: {
+			get: function() {
+				return this.$store.state.signalsFullWidth
+			},
+
+			set: function(val: boolean): void {
+				this.$store.commit('setSignalFullWidth', val)
+			}
+		}
+	},
 
 	data() {
 		return {
 			signalDoc: [] as Signal[],
-			signalFullWidth: false
+			chartFullWidth: false
 		}
 	},
 
