@@ -19,6 +19,11 @@ firebase.initializeApp(creds)
 
 const { db } = new DBWrapper()
 
+type BaseState = {
+	stocks: Stock[]
+	stockContexts: StockContext[]
+}
+
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -31,9 +36,26 @@ export default new Vuex.Store({
 		bindStocks: firestoreAction(({ bindFirestoreRef }) => {
 			return bindFirestoreRef('stocks', db.collection('securities'))
 		}),
+
 		bindStockContexts: firestoreAction(({ bindFirestoreRef }) => {
 			return bindFirestoreRef('stockContexts', db.collection('context'))
-		})
+		}),
+
+		loadStocks({ state, dispatch }) {
+			const bState = state as BaseState
+
+			if (bState.stocks.length < 1) {
+				dispatch('bindStocks')
+			}
+		},
+
+		loadContexts({ state, dispatch }) {
+			const bState = state as BaseState
+
+			if (bState.stockContexts.length < 1) {
+				dispatch('bindStockContexts')
+			}
+		}
 	},
 	modules: {}
 })
