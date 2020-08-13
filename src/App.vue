@@ -27,19 +27,19 @@
 					<v-divider></v-divider>
 
 					<v-list nav dense>
-						<v-list-item link to="pending">
+						<v-list-item link to="/pending">
 							<v-list-item-icon>
 								<v-icon>accessible_forward</v-icon>
 							</v-list-item-icon>
 							<v-list-item-title>Pending Signals</v-list-item-title>
 						</v-list-item>
-						<v-list-item link to="stocks">
+						<v-list-item link to="/stocks">
 							<v-list-item-icon>
 								<v-icon>list</v-icon>
 							</v-list-item-icon>
 							<v-list-item-title>Stocks</v-list-item-title>
 						</v-list-item>
-						<v-list-item link to="about">
+						<v-list-item link to="/about">
 							<v-list-item-icon>
 								<v-icon>info</v-icon>
 							</v-list-item-icon>
