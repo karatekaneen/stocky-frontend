@@ -1,27 +1,34 @@
 <template>
 	<v-card light rounded>
 		<v-card-actions>
-			<v-btn @click="loading = !loading">xxxxx</v-btn>
-			<v-spacer />
 			<slot name="actions" />
 		</v-card-actions>
-		<apex-chart width="100%" :options="chartOptions" :series="[signalSeries]" />
-
-		<v-skeleton-loader :loading="loading" transition="scale-transition" type="image">
-			<!-- height="94" -->
-			<v-card> </v-card>
-		</v-skeleton-loader>
+		<div style="width: 100%; height: 40vh">
+			<div id="chartdiv" style="height: 100%"></div>
+		</div>
+		<!-- <apex-chart
+			width="100%"
+			:options="chartOptions"
+			:series="[signalSeries.buys, signalSeries.sells, priceSeries]"
+		/> -->
 	</v-card>
 </template>
 
 <script lang="ts">
 import Vue, { PropType } from 'vue'
-import VueApexCharts from 'vue-apexcharts'
+// import VueApexCharts from 'vue-apexcharts'
 import { Signal } from '@/types'
+import DBWrapper from '@/services/DBWrapper'
+import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts'
+
+const { db } = new DBWrapper()
 
 type ChartDataPoint = {
-	x: number | string
-	y: number
+	time: string
+	close: number
+	open: number
+	high: number
+	low: number
 }
 type ChartSeries = {
 	name: string
@@ -29,163 +36,135 @@ type ChartSeries = {
 	data: ChartDataPoint[]
 }
 
+type SeriesMarker = {
+	time: string
+	position: 'belowBar' | 'aboveBar'
+	color: string
+	shape: 'arrowUp' | 'square'
+	text: string
+}
+
+type PricePoint = {
+	date: string
+	close: number
+	open: number
+	high: number
+	low: number
+	owners: number | null
+	volume: number
+}
+
+type PriceDocument = {
+	lastPricePoint: string
+	priceData: PricePoint[]
+	type: string
+}
+
 export default Vue.extend({
-	components: { apexChart: VueApexCharts },
+	// components: { apexChart: VueApexCharts },
 
 	props: {
 		signals: {
 			type: Array as PropType<Signal[]>,
 			required: false
+		},
+
+		stockId: {
+			type: String,
+			required: true
 		}
 	},
 
-	computed: {
-		signalSeries(): ChartSeries {
-			let data = [] as ChartDataPoint[]
-			if (this.signals) {
-				data = this.signals.map(({ date, price }) => ({ x: date, y: price }))
-			}
+	mounted() {
+		this.$bind('priceDoc', db.collection('prices').doc(this.stockId))
+		this.createChartInstance()
+	},
 
-			return { name: 'Signals', type: 'scatter', data }
+	beforeDestroy() {
+		this.chart?.remove()
+	},
+
+	computed: {
+		signalMarkers(): SeriesMarker[] {
+			return this.signals.map(({ date, action, price }) => {
+				const buy = action === 'buy'
+				const type = buy ? 'BUY' : 'SELL'
+				return {
+					time: date,
+					position: buy ? 'belowBar' : 'aboveBar',
+					color: buy ? 'green' : 'red',
+					shape: buy ? 'arrowUp' : 'square',
+					text: `${type} @ ${price}`
+				}
+			})
+		}
+	},
+
+	watch: {
+		priceDoc: {
+			// immediate: true,
+			// deep: true,
+			handler(document: PriceDocument): void {
+				const priceData = document.priceData || []
+				this.priceData = priceData.map(({ date, open, high, low, close }) => ({
+					time: date,
+					high,
+					low,
+					close,
+					open
+				}))
+
+				this.setSeries(this.priceData)
+			}
 		}
 	},
 	data() {
 		return {
-			loading: true,
-			series: [
-				{
-					name: 'Signals',
-					type: 'scatter',
+			priceDoc: null as PriceDocument | null,
+			chart: null as IChartApi | null,
+			priceData: [] as ChartDataPoint[],
+			candleSeries: null as ISeriesApi<'Candlestick'> | null
+		}
+	},
 
-					data: [
-						{
-							x: 1,
-							y: 2.14
-						},
-						{
-							x: 1.2,
-							y: 2.19
-						},
-						{
-							x: 1.8,
-							y: 2.43
-						},
-						{
-							x: 2.3,
-							y: 3.8
-						},
-						{
-							x: 2.6,
-							y: 4.14
-						},
-						{
-							x: 2.9,
-							y: 5.4
-						},
-						{
-							x: 3.2,
-							y: 5.8
-						},
-						{
-							x: 3.8,
-							y: 6.04
-						},
-						{
-							x: 4.55,
-							y: 6.77
-						},
-						{
-							x: 4.9,
-							y: 8.1
-						},
-						{
-							x: 5.1,
-							y: 9.4
-						},
-						{
-							x: 7.1,
-							y: 7.14
-						},
-						{
-							x: 9.18,
-							y: 8.4
-						}
-					]
-				}
-			],
-			// {
-			// 	name: 'Line',
-			// 	type: 'line',
-			// 	data: [
-			// 		{
-			// 			x: 1,
-			// 			y: 2
-			// 		},
-			// 		{
-			// 			x: 2,
-			// 			y: 3
-			// 		},
-			// 		{
-			// 			x: 3,
-			// 			y: 4
-			// 		},
-			// 		{
-			// 			x: 4,
-			// 			y: 5
-			// 		},
-			// 		{
-			// 			x: 5,
-			// 			y: 6
-			// 		},
-			// 		{
-			// 			x: 6,
-			// 			y: 7
-			// 		},
-			// 		{
-			// 			x: 7,
-			// 			y: 8
-			// 		},
-			// 		{
-			// 			x: 8,
-			// 			y: 9
-			// 		},
-			// 		{
-			// 			x: 12,
-			// 			y: 10
-			// 		},
-			// 		{
-			// 			x: 15,
-			// 			y: 11
-			// 		}
-			// 	]
-			// }
-			// ],
-			chartOptions: {
-				chart: {
-					height: 400,
-					type: 'line'
-				},
-				fill: {
-					type: 'solid'
-				},
-				colors: ['#2E93fA', '#66DA26', '#546E7A', '#E91E63', '#FF9800'],
-				markers: {
-					size: [6, 10]
-				},
-				tooltip: {
-					shared: false,
-					intersect: true
-				},
-				legend: {
-					show: false
-				},
-				xaxis: {
-					type: 'numeric',
-					min: 0,
-					max: 12,
-					tickAmount: 12
-				}
+	methods: {
+		setSeries(priceData: ChartDataPoint[]) {
+			if (!this.chart) {
+				return
 			}
+
+			const series = this.candleSeries || this.chart.addCandlestickSeries()
+			series.setData(priceData)
+
+			series.setMarkers(this.signalMarkers)
+		},
+
+		createChartInstance() {
+			this.chart = createChart('chartdiv', {
+				layout: {
+					backgroundColor: '#000000',
+					textColor: 'rgba(255, 255, 255, 0.9)'
+				},
+				grid: {
+					vertLines: {
+						color: 'rgba(197, 203, 206, 0.15)'
+					},
+					horzLines: {
+						color: 'rgba(197, 203, 206, 0)'
+					}
+				},
+				// crosshair: {
+				// 	mode: LightweightCharts.CrosshairMode.Normal
+				// },
+				rightPriceScale: {
+					borderColor: 'rgba(197, 203, 206, 0.8)'
+				},
+				timeScale: {
+					borderColor: 'rgba(197, 203, 206, 0.8)'
+				}
+			})
+
+			this.chart.remove
 		}
 	}
 })

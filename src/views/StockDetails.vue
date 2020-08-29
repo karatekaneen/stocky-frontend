@@ -2,8 +2,12 @@
 	<v-container fluid>
 		<div>{{ $route.params.id }}</div>
 		<v-row>
-			<v-col :cols="chartFullWidth ? 12 : 6">
-				<price-chart v-if="signalDoc && signalDoc.signals" :signals="signalDoc.signals">
+			<v-col :cols="chartFullWidth ? 12 : 12">
+				<price-chart
+					v-if="signalDoc && signalDoc.signals"
+					:signals="signalDoc.signals"
+					:stockId="$route.params.id"
+				>
 					<template #actions>
 						<v-icon @click="chartFullWidth = !chartFullWidth">
 							{{ chartFullWidth ? 'fullscreen_exit' : 'fullscreen' }}
