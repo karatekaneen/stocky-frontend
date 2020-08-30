@@ -3,7 +3,7 @@
 		<v-card-actions>
 			<slot name="actions" />
 		</v-card-actions>
-		<div style="width: 100%; height: 40vh">
+		<div style="width: 100%; height: 60vh">
 			<div id="chartdiv" style="height: 100%"></div>
 		</div>
 		<!-- <apex-chart
@@ -23,17 +23,24 @@ import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts'
 
 const { db } = new DBWrapper()
 
-type ChartDataPoint = {
+type CandlestickDatapoint = {
 	time: string
 	close: number
 	open: number
 	high: number
 	low: number
 }
+
+type VolumeDatapoint = {
+	time: string
+	value: number
+	color?: string
+}
+
 type ChartSeries = {
 	name: string
 	type: string
-	data: ChartDataPoint[]
+	data: CandlestickDatapoint[]
 }
 
 type SeriesMarker = {
@@ -106,15 +113,27 @@ export default Vue.extend({
 			// deep: true,
 			handler(document: PriceDocument): void {
 				const priceData = document.priceData || []
-				this.priceData = priceData.map(({ date, open, high, low, close }) => ({
-					time: date,
-					high,
-					low,
-					close,
-					open
-				}))
 
-				this.setSeries(this.priceData)
+				const { price, volume } = priceData.reduce(
+					(agg, { date, open, high, low, close, volume }) => {
+						agg.price.push({
+							time: date,
+							high,
+							low,
+							close,
+							open
+						})
+
+						agg.volume.push({ time: date, value: ((close + open + high + low) / 4) * volume })
+
+						return agg
+					},
+					{ price: [] as CandlestickDatapoint[], volume: [] as VolumeDatapoint[] }
+				)
+
+				this.priceData = price
+				this.volumeData = volume
+				this.setSeries(this.priceData, this.volumeData)
 			}
 		}
 	},
@@ -122,21 +141,37 @@ export default Vue.extend({
 		return {
 			priceDoc: null as PriceDocument | null,
 			chart: null as IChartApi | null,
-			priceData: [] as ChartDataPoint[],
-			candleSeries: null as ISeriesApi<'Candlestick'> | null
+			priceData: [] as CandlestickDatapoint[],
+			volumeData: [] as VolumeDatapoint[],
+			priceSeries: null as ISeriesApi<'Candlestick'> | null,
+			volumeSeries: null as ISeriesApi<'Histogram'> | null
 		}
 	},
 
 	methods: {
-		setSeries(priceData: ChartDataPoint[]) {
+		setSeries(priceData: CandlestickDatapoint[], volumeData: VolumeDatapoint[]) {
 			if (!this.chart) {
 				return
 			}
 
-			const series = this.candleSeries || this.chart.addCandlestickSeries()
-			series.setData(priceData)
+			const priceSeries = this.priceSeries || this.chart.addCandlestickSeries()
+			priceSeries.setData(priceData)
 
-			series.setMarkers(this.signalMarkers)
+			const volumeSeries =
+				this.volumeSeries ||
+				this.chart.addHistogramSeries({
+					color: '#ccc',
+					priceFormat: {
+						type: 'volume'
+					},
+					priceScaleId: '',
+					scaleMargins: {
+						top: 0.8,
+						bottom: 0
+					}
+				})
+			volumeSeries.setData(volumeData)
+			priceSeries.setMarkers(this.signalMarkers)
 		},
 
 		createChartInstance() {
@@ -144,6 +179,14 @@ export default Vue.extend({
 				layout: {
 					backgroundColor: '#000000',
 					textColor: 'rgba(255, 255, 255, 0.9)'
+				},
+				watermark: {
+					visible: true,
+					fontSize: 24,
+					horzAlign: 'center',
+					vertAlign: 'center',
+					color: 'rgba(100, 101, 188, 0.5)',
+					text: 'Stock Name'
 				},
 				grid: {
 					vertLines: {
@@ -163,8 +206,6 @@ export default Vue.extend({
 					borderColor: 'rgba(197, 203, 206, 0.8)'
 				}
 			})
-
-			this.chart.remove
 		}
 	}
 })

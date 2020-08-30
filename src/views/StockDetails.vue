@@ -60,6 +60,8 @@ export default Vue.extend({
 	},
 
 	created() {
+		this.$store.dispatch('loadStocks')
+		this.$store.dispatch('loadContexts')
 		this.$bind('signalDoc', db.collection('signals').doc(this.$route.params.id))
 	}
 })
