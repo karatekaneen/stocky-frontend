@@ -24,3 +24,17 @@ export type StockContext = {
 	triggerPrice: number
 	id: number
 }
+
+export type VolumeComparison = {
+	result: number
+	value: number
+}
+
+export type StatisticSummary = {
+	winrate: number
+	averageTrade: number
+	averageWin: number
+	averageLoss: number
+	gainLossFactor: number
+	profitFactor: number
+}
