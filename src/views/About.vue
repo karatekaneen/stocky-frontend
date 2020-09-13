@@ -1,7 +1,7 @@
 <template>
 	<v-container fluid>
 		<v-row align="center" justify="center">
-			<v-col cols="12">
+			<v-col md="6" sm="12">
 				<statistic-summary documentName="volume-to-result" :nameFunc="volumeNamingFunc">
 					<template #title>Volume Study</template>
 					<template #description>
@@ -9,7 +9,7 @@
 					</template>
 				</statistic-summary>
 			</v-col>
-			<v-col>
+			<v-col md="6" sm="12">
 				<statistic-summary documentName="volume-ratio-to-result" :nameFunc="volumeNamingFunc">
 					<template #title>Volume Ratio Study</template>
 					<template #description>
