@@ -47,7 +47,7 @@ export default Vue.extend({
 					throw new Error(`Missing stock with id ${sc.id}`)
 				}
 
-				return { ...sc, stock, triggerPrice: parseFloat(sc.triggerPrice.toFixed(2)) }
+				return { ...sc, stock, triggerPrice: parseFloat((sc.triggerPrice ?? 0).toFixed(2)) }
 			})
 		}
 	},

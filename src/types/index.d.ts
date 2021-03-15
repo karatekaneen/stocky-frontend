@@ -21,7 +21,7 @@ export type StockContext = {
 	highPrice: number
 	lowPrice: number
 	regime: 'bull' | 'bear' | 'neutral'
-	triggerPrice: number
+	triggerPrice?: number
 	id: number
 }
 
